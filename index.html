@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Crédito Consignado | Consultoria Independente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px); }
+        .step-content { display: none; }
+        .step-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn-primary { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.4); }
+        
+        .card-choice { border: 2px solid #f1f5f9; transition: all 0.2s ease; position: relative; }
+        .card-choice:hover { border-color: #64748b; background-color: #f8fafc; }
+        .card-choice.selected { border-color: #0f172a; background-color: #f8fafc; box-shadow: 0 0 0 1px #0f172a; }
+        
+        input[type="range"] { 
+            accent-color: #0f172a; 
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+        }
+
+        .term-badge { cursor: pointer; border: 2px solid #e2e8f0; transition: all 0.2s; user-select: none; }
+        .term-badge.active { background: #0f172a; color: white; border-color: #0f172a; }
+        
+        /* Custom Message Box */
+        #custom-alert {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: slideInDown 0.3s ease;
+        }
+        @keyframes slideInDown { from { transform: translate(-50%, -100%); } to { transform: translate(-50%, 0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <!-- Mensagem de Erro Customizada -->
+    <div id="custom-alert" class="bg-red-600 text-white font-bold text-sm"></div>
+
+    <!-- AVISO DE TRANSPARÊNCIA -->
+    <header class="bg-amber-50 border-b border-amber-200 text-amber-800 text-[10px] md:text-xs py-2 px-4 text-center font-bold uppercase tracking-tight">
+        ⚠️ Atenção: Consultoria privada independente. Não somos o site oficial do INSS ou Governo.
+    </header>
+
+    <!-- Nav -->
+    <nav class="sticky top-0 z-50 glass border-b border-slate-200 py-4 px-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white shadow-lg font-black italic">P</div>
+                <span class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Portal<span class="text-slate-500">Consignado</span></span>
+            </div>
+            <div class="hidden md:flex items-center gap-6 text-right">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consultoria Especializada</p>
+                    <p class="text-sm font-bold text-green-600 flex items-center gap-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Atendimento Online
+                    </p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-6 py-12 lg:py-20">
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+            
+            <!-- Conteúdo Esquerda -->
+            <div class="lg:col-span-5 space-y-10">
+                <div class="space-y-6">
+                    <h1 class="text-4xl md:text-6xl font-[800] text-slate-900 leading-[1.1] tracking-tight">
+                        Simule seu crédito com <span class="text-slate-500">clareza real.</span>
+                    </h1>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Compare as melhores taxas do mercado consignado e receba suporte especializado para encontrar a melhor proposta para o seu bolso.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                        <span class="text-xl">🛡️</span>
+                        <span class="text-xs font-bold text-slate-700">Dados Protegidos</span>
+                    </div>
+                    <div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                        <span class="text-xl">📊</span>
+                        <span class="text-xs font-bold text-slate-700">Taxas Atualizadas</span>
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-slate-400 leading-relaxed italic border-l-2 border-slate-200 pl-4">
+                    *Aprovação sujeita a análise de margem e convênio. Atuamos conforme Resolução CMN nº 3.954.
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <div class="lg:col-span-7" id="form-container">
+                <div class="bg-white rounded-[40px] shadow-2xl shadow-slate-900/5 border border-slate-100 overflow-hidden">
+                    
+                    <!-- Progresso -->
+                    <div class="bg-slate-50 border-b border-slate-100 p-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" id="step-label">Passo 1 de 6</p>
+                            <span class="text-[10px] font-bold text-slate-400" id="step-percentage">15%</span>
+                        </div>
+                        <div class="flex gap-2" id="progress-dots"></div>
+                    </div>
+
+                    <form id="pro-form" class="p-8 md:p-12 min-h-[520px] flex flex-col justify-between">
+                        
+                        <!-- ETAPA 1: PERFIL -->
+                        <div id="step-1" class="step-content active">
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-8">Qual sua fonte de renda?</h2>
+                            <div class="grid gap-4">
+                                <button type="button" onclick="selectOption('perfil', 'Aposentado')" class="card-choice p-6 rounded-3xl flex items-center gap-6 group w-full text-left">
+                                    <div class="w-14 h-14 bg-slate-100 text-2xl rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">👴</div>
+                                    <span class="text-lg font-bold text-slate-800">Aposentadoria INSS</span>
+                                </button>
+                                <button type="button" onclick="selectOption('perfil', 'Pensionista')" class="card-choice p-6 rounded-3xl flex items-center gap-6 group w-full text-left">
+                                    <div class="w-14 h-14 bg-slate-100 text-2xl rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">👵</div>
+                                    <span class="text-lg font-bold text-slate-800">Pensão por Morte</span>
+                                </button>
+                                <button type="button" onclick="selectOption('perfil', 'BPC/LOAS')" class="card-choice p-6 rounded-3xl flex items-center gap-6 group w-full text-left">
+                                    <div class="w-14 h-14 bg-slate-100 text-2xl rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">♿</div>
+                                    <span class="text-lg font-bold text-slate-800">BPC / LOAS</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="input-perfil">
+                        </div>
+
+                        <!-- ETAPA 2: SERVIÇO -->
+                        <div id="step-2" class="step-content">
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-8">O que você precisa?</h2>
+                            <div class="grid gap-4">
+                                <button type="button" onclick="selectOption('servico', 'Dinheiro Novo')" class="card-choice p-6 rounded-3xl flex items-center justify-between group w-full">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">R$</div>
+                                        <span class="text-lg font-bold">Dinheiro Novo / Cartão</span>
+                                    </div>
+                                    <span class="text-slate-300">→</span>
+                                </button>
+                                <button type="button" onclick="selectOption('servico', 'Reduzir Parcelas')" class="card-choice p-6 rounded-3xl flex items-center justify-between group w-full">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-slate-100 text-2xl rounded-xl flex items-center justify-center">📉</div>
+                                        <span class="text-lg font-bold">Reduzir Juros (Portabilidade)</span>
+                                    </div>
+                                    <span class="text-slate-300">→</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="input-servico">
+                        </div>
+
+                        <!-- ETAPA 3: SIMULADOR -->
+                        <div id="step-3" class="step-content">
+                            <h2 class="text-2xl font-black text-slate-900 mb-8">Simulador de Valores</h2>
+                            <div class="space-y-8">
+                                <div>
+                                    <div class="flex justify-between items-end mb-4">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor do Empréstimo</span>
+                                        <span class="text-3xl font-black text-slate-800" id="sim-val-display">R$ 5.000</span>
+                                    </div>
+                                    <input type="range" id="sim-range" min="1000" max="25000" step="500" value="5000" class="w-full cursor-pointer">
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Prazo de Pagamento</p>
+                                    <div class="grid grid-cols-5 gap-2" id="term-container">
+                                        <!-- Gerado via JS -->
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900 rounded-[32px] p-6 text-white text-center md:text-left">
+                                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Parcela Mensal (Estimada)</p>
+                                            <p class="text-4xl font-black" id="res-parcela">R$ 0,00</p>
+                                        </div>
+                                        <div class="h-px w-full md:h-12 md:w-px bg-slate-800"></div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Taxa Sugerida</p>
+                                            <p class="text-xl font-bold">1,66% a.m.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="changeStep(1)" class="w-full py-5 bg-slate-800 text-white font-black rounded-2xl text-lg hover:bg-slate-700 transition-all uppercase tracking-tighter">
+                                    Simular com meus dados
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ETAPA 4: DADOS PESSOAIS -->
+                        <div id="step-4" class="step-content">
+                            <h2 class="text-2xl font-black text-slate-900 mb-8">Quase lá! Seus dados:</h2>
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Nome Completo</label>
+                                    <input type="text" id="form-nome" placeholder="Ex: Maria da Silva" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 ring-slate-800 outline-none transition-all font-bold">
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">CPF</label>
+                                        <input type="text" id="form-cpf" placeholder="000.000.000-00" maxlength="14" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 ring-slate-800 outline-none transition-all font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Celular / WhatsApp</label>
+                                        <input type="text" id="form-tel" placeholder="(00) 00000-0000" maxlength="15" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 ring-slate-800 outline-none transition-all font-bold">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ETAPA 5: PAGAMENTO -->
+                        <div id="step-5" class="step-content">
+                            <h2 class="text-2xl font-black text-slate-900 mb-8">Detalhes do Benefício</h2>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Banco onde recebe o benefício</label>
+                                    <select id="form-banco" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 ring-slate-800 outline-none font-bold appearance-none">
+                                        <option value="">Selecione...</option>
+                                        <option>Bradesco</option>
+                                        <option>Itaú</option>
+                                        <option>Banco do Brasil</option>
+                                        <option>Caixa Econômica</option>
+                                        <option>Mercantil</option>
+                                        <option>Santander</option>
+                                        <option>Crefisa</option>
+                                        <option>Outro</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Dia de pagamento mensal</label>
+                                    <select id="form-dia" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 ring-slate-800 outline-none font-bold appearance-none">
+                                        <option value="">Selecione o dia...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ETAPA 6: SUCESSO -->
+                        <div id="step-6" class="step-content text-center py-6">
+                            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-4">Simulação Concluída!</h2>
+                            <p class="text-slate-600 mb-8 font-medium">Analisamos sua solicitação. Clique no botão abaixo para ver as taxas liberadas para seu CPF via WhatsApp.</p>
+                            <button type="button" onclick="handleWhatsAppRedirect()" class="w-full py-6 bg-green-600 text-white font-black rounded-2xl text-xl hover:bg-green-700 transition-all shadow-xl flex items-center justify-center gap-3">
+                                LIBERAR TAXAS NO WHATSAPP
+                            </button>
+                        </div>
+
+                        <!-- Navegação -->
+                        <div class="mt-10 flex flex-col md:flex-row gap-3" id="nav-container">
+                            <button type="button" id="prevBtn" onclick="changeStep(-1)" class="hidden md:block w-full md:w-1/3 py-4 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-all uppercase text-xs tracking-widest">Voltar</button>
+                            <button type="button" id="nextBtn" onclick="changeStep(1)" class="w-full flex-1 py-4 btn-primary text-white font-black rounded-xl text-lg shadow-lg uppercase tracking-tight">Próximo Passo</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-950 text-white py-16 px-6 mt-12">
+        <div class="max-w-7xl mx-auto space-y-10">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-8 border-b border-slate-800 pb-10">
+                <div class="max-w-xs">
+                    <span class="text-xl font-black uppercase italic">Portal Consignado</span>
+                    <p class="text-[10px] text-slate-500 mt-2">Consultoria especializada em crédito consignado. Atendimento humanizado e focado em transparência.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                    <p>CNPJ: 00.000.000/0001-00</p>
+                    <p>Rua Exemplo, 123 - São Paulo/SP</p>
+                </div>
+            </div>
+            <p class="text-[9px] text-slate-600 text-center uppercase tracking-[0.2em]">
+                O Portal Consignado é um correspondente bancário e não uma instituição financeira. Não solicitamos pagamentos antecipados.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 6;
+        let selectedTerm = 84;
+        const phoneMain = "5511954802338";
+
+        // Init
+        window.onload = () => {
+            initProgressDots();
+            initDays();
+            initTerms();
+            updateStepView();
+            recalc();
+        };
+
+        function initProgressDots() {
+            const container = document.getElementById('progress-dots');
+            for(let i=1; i<=totalSteps; i++) {
+                const dot = document.createElement('div');
+                dot.id = `dot-${i}`;
+                dot.className = "h-1.5 flex-1 rounded-full bg-slate-200 transition-all duration-500";
+                container.appendChild(dot);
+            }
+        }
+
+        function initDays() {
+            const select = document.getElementById('form-dia');
+            for(let i=1; i<=31; i++) {
+                const day = i < 10 ? '0' + i : i;
+                const opt = new Option(`Dia ${day}`, day);
+                select.add(opt);
+            }
+        }
+
+        function initTerms() {
+            const container = document.getElementById('term-container');
+            [36, 48, 60, 72, 84].forEach(t => {
+                const badge = document.createElement('div');
+                badge.className = `term-badge py-3 rounded-xl text-center font-bold text-xs ${t === 84 ? 'active' : ''}`;
+                badge.innerText = `${t}x`;
+                badge.onclick = () => {
+                    selectedTerm = t;
+                    document.querySelectorAll('.term-badge').forEach(b => b.classList.remove('active'));
+                    badge.classList.add('active');
+                    recalc();
+                };
+                container.appendChild(badge);
+            });
+        }
+
+        // Logic
+        function selectOption(id, val) {
+            document.getElementById(`input-${id}`).value = val;
+            const currentDiv = document.getElementById(`step-${currentStep}`);
+            currentDiv.querySelectorAll('.card-choice').forEach(c => c.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            setTimeout(() => changeStep(1), 250);
+        }
+
+        document.getElementById('sim-range').oninput = function() {
+            document.getElementById('sim-val-display').innerText = `R$ ${parseInt(this.value).toLocaleString('pt-BR')}`;
+            recalc();
+        };
+
+        function recalc() {
+            const val = parseInt(document.getElementById('sim-range').value);
+            const rate = 0.0166;
+            // PMT = PV * [i(1+i)^n] / [(1+i)^n - 1]
+            const pmt = val * ((rate * Math.pow(1 + rate, selectedTerm)) / (Math.pow(1 + rate, selectedTerm) - 1));
+            document.getElementById('res-parcela').innerText = `R$ ${pmt.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        function changeStep(n) {
+            if (n === 1 && !validate()) return;
+            currentStep += n;
+            updateStepView();
+            window.scrollTo({ top: document.getElementById('form-container').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        function validate() {
+            const showError = (msg) => {
+                const el = document.getElementById('custom-alert');
+                el.innerText = msg;
+                el.style.display = 'block';
+                setTimeout(() => el.style.display = 'none', 3000);
+            };
+
+            if (currentStep === 1 && !document.getElementById('input-perfil').value) return false;
+            if (currentStep === 2 && !document.getElementById('input-servico').value) return false;
+            
+            if (currentStep === 4) {
+                const nome = document.getElementById('form-nome').value.trim();
+                const cpf = document.getElementById('form-cpf').value;
+                const tel = document.getElementById('form-tel').value;
+
+                if (nome.split(' ').length < 2) { showError("Digite seu nome completo."); return false; }
+                if (cpf.length < 14) { showError("CPF incompleto."); return false; }
+                if (tel.length < 14) { showError("WhatsApp incompleto."); return false; }
+            }
+
+            if (currentStep === 5) {
+                if (!document.getElementById('form-banco').value) { showError("Selecione seu banco."); return false; }
+            }
+
+            return true;
+        }
+
+        function updateStepView() {
+            document.querySelectorAll('.step-content').forEach((s, idx) => s.classList.toggle('active', idx === currentStep - 1));
+            document.getElementById('step-label').innerText = `Passo ${currentStep} de ${totalSteps}`;
+            document.getElementById('step-percentage').innerText = `${Math.round((currentStep/totalSteps)*100)}%`;
+            
+            // Progress Dots
+            for(let i=1; i<=totalSteps; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if(i < currentStep) { dot.style.background = "#94a3b8"; dot.style.flex = "1"; }
+                else if(i === currentStep) { dot.style.background = "#0f172a"; dot.style.flex = "2"; }
+                else { dot.style.background = "#e2e8f0"; dot.style.flex = "1"; }
+            }
+
+            // Buttons
+            document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1 || currentStep === totalSteps);
+            document.getElementById('nextBtn').classList.toggle('hidden', currentStep === 3 || currentStep === totalSteps);
+            document.getElementById('nav-container').classList.toggle('hidden', currentStep === totalSteps);
+        }
+
+        // Masks
+        document.getElementById('form-cpf').oninput = function(e) {
+            let v = e.target.value.replace(/\D/g, "");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            e.target.value = v;
+        };
+
+        document.getElementById('form-tel').oninput = function(e) {
+            let v = e.target.value.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+            e.target.value = v;
+        };
+
+        function handleWhatsAppRedirect() {
+            const data = {
+                perfil: document.getElementById('input-perfil').value,
+                servico: document.getElementById('input-servico').value,
+                valor: document.getElementById('sim-val-display').innerText,
+                parcela: document.getElementById('res-parcela').innerText,
+                prazo: selectedTerm,
+                nome: document.getElementById('form-nome').value,
+                cpf: document.getElementById('form-cpf').value,
+                tel: document.getElementById('form-tel').value,
+                banco: document.getElementById('form-banco').value,
+                dia: document.getElementById('form-dia').value
+            };
+
+            const text = `📌 *NOVA SIMULAÇÃO CONSIGNADO*\n\n` +
+                         `👤 *CLIENTE:* ${data.nome}\n` +
+                         `🆔 *CPF:* ${data.cpf}\n` +
+                         `📱 *ZAP:* ${data.tel}\n\n` +
+                         `💰 *PEDIDO:* ${data.valor} em ${data.prazo}x\n` +
+                         `📉 *PARCELA:* ${data.parcela}\n\n` +
+                         `🏥 *TIPO:* ${data.perfil}\n` +
+                         `🏦 *BANCO:* ${data.banco} (Dia ${data.dia})\n` +
+                         `🛠️ *Deseja:* ${data.servico}\n\n` +
+                         `_Solicito verificação de margem atualizada._`;
+
+            window.open(`https://wa.me/${phoneMain}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    </script>
+</body>
+</html>
